@@ -1,0 +1,18 @@
+Quickstart: 
+
+1. Install >python setup.py install
+2. Test    >python pace.py -m testdata.gt.txt -r 0.15 -o testout -p
+3. Help    >python pace.py -h
+
+Requirements:
+
+PACE requires Python version 2.6 or 2.7. In addition it requires the packages
+numpy, scipy and cython. We reccomend obtaining these through the Enthought
+Python Distribution (EPD) which is freely available for academic use from 
+http://www.enthought.com/.
+ 
+Manual: 
+
+>pdflatex pace_manual.tex  
+
+for full details of options. 

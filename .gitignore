@@ -1,0 +1,11 @@
+#bytecode
+*.pyc
+#temp latex files
+*.aux
+*.log
+*.toc
+*.out
+#manual - compile from scratch each time
+pace_manual.pdf
+#c files - should generate using cython at setup. 
+c_viterbi2.c

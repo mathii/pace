@@ -1,0 +1,2 @@
+#!/bin/sh
+gunzip -c $1 | awk -v chr=$3 '{if($7=="PASS" && $1==chr){printf "%s",$2; for(i=10; i<=NF; i++){printf "\t%d",substr($i,1,1)+substr($i,3,1)};printf "\n"} else if($7=="FILTER"){for(i=10; i<=NF; i++){printf "%s\t",$i};printf "\n"}}' | gzip -c > $2

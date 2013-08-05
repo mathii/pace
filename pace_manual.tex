@@ -1,0 +1,122 @@
+\documentclass[10pt]{refart}
+\usepackage{hyperref}
+
+\title{\emph{PACE}: fast and efficient phasing of genotype data.}
+\author{Iain Mathieson, Denise Xifara, Gil McVean}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  This document describes the input, command line options, and output of PACE. PACE takes genotype data for a sample of unrelated individuals and phases it to produce haplotypes for some or all of the individuals in the sample. It does this by using a hidden Markov model to find chunks of close relatedness and construct pseudo-trios local to genomic regions which are then phased as trios. The algorithm and its performance are described in the acompanying paper (Xifara, Mathieson and McVean: Manuscript under preparation).
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Installation}
+\subsection{Requirements}
+PACE requires Python version 2.6 or 2.7. In addition it requires the packages \emph{numpy}, \emph{scipy} and \emph{cython}. We reccomend obtaining these through the Enthought Python Distribution (EPD) which is freely available for academic use from \url{http://www.enthought.com/}.
+
+\subsection{Installation}
+Compile and install the C extentions for PACE by changing to the PACE directory and typing:
+\newline
+\newline
+\texttt{python setup.py install}
+
+\subsection{Testing}
+We have provided a small file of simulated genotypes. To test that PACE is running correctly, run the following command in the PACE directory:
+\newline
+\newline
+\texttt{python pace.py -m testdata.gt.txt -r 0.15 -o testout -p}
+\newline
+\newline
+PACE should run, and create a file named ``testout.ph.txt'' which contains phased haplotypes. 
+
+\subsection{Licence}
+PACE is licenced under the Apache 2.0 licence \url{http://www.apache.org/licenses/LICENSE-2.0}. Essentially you are free to use, modify and redistribute the software and code, with attribution. If you are interested in developing the code, please contact Iain Mathieson at \href{mailto:iain.mathieson@well.ox.ac.uk}{iain.mathieson@well.ox.ac.uk}.
+
+\newpage
+
+\section{Input options}
+All of these take arguments. Input files ending in ``.gz'' are assumed to be gzipped and read accordingly. 
+\subsection{\texttt{-m [--minimal]}}
+Specify the input genotype file. This contains genotypes for, say, $N$ samples - although only for a single chromosome. It takes the following format: 
+\begin{itemize}
+\item
+First row: Sample names
+\item
+Second and subsequent rows: The first entry is chromosomal position and subsequent entries are genotypes which must be either 0, 1 or 2. 
+\end{itemize}
+The shell script vcf2pace will convert vcf files into the format described above - extracting the specified chromosome. 
+\texttt{vcf2pace input.vcf.gz output.txt.gz chr1}
+
+\subsection{\texttt{-r [--recombination]}}
+Specify a recombination map. This is either a text file in IMPUTE2
+genetic map format, or a constant which specifies recombination rate
+in cm/mb. The recombination rate has a surprisingly small impact on
+the results.
+
+\subsection{\texttt{-o [--out]}}
+Root name for output files. Phasing output will be in the file {testroot}.ph.txt
+
+\newpage
+\section{Output options}
+No arguments
+\subsection{\texttt{-q [--quality]}}
+Output quality scores in the file {testroot}.qa.txt. Scores are on a scale from 0 to 100, with 0 being the worst and 100 being the best. Scores are calcuated by taking the percentage of paths which agree with the final phasing, so are more granular the more phasing paths are taken the more accurate they are. 
+
+\subsection{\texttt{-b [--best\_parents]}}
+Output the best parents (i.e. the pairs for the top path) in the file {testroot}.bp.txt. The parents are numbered according to the order in the input file (starting from 0). 
+
+\subsection{\texttt{-z [--gzip]}}
+Output gzipped files. Since the output files are fairly repetitive, this typically reduces the file size by a factor of at least 20. 
+
+\newpage
+
+\section{Other options}
+\subsection{\texttt{-p [--phase]}}
+No argument. Phase the sample - if you don't specify this, nothing will happen.
+
+\subsection{\texttt{-i [--individual]}}
+Takes an argument. Phase only these individuals. The argument can either be a single sample name, or a text file with one sample name per line. 
+
+\subsection{\texttt{-x [--max-snps]}}
+Specify a constant argument $n$: use only the first $n$ SNPs.  
+
+\subsection{\texttt{-u [--multi\_process]}}
+Specify an integer argument. Use this many processes in parallell to phase. 
+
+\subsection{\texttt{-c [--closest]}}
+Specify an integer argument $n$. Subsample and use only the closest $n$ individuals to each individual to phase. ``Closeness'' is determined by having the fewest number of incompatible sites. i.e. sites where the person you're trying to phase has genotype 0 and the other person has genotype 2, or vice versa. 
+
+\subsection{\texttt{-e [--everything]}}
+No argument. Try to phase every site. Singletons are phased randomly. Actually this doesn't do much better than phasing normally and then phasing remaining sites randomly
+
+\newpage
+
+\section{Obscure options}
+All of these take arguments. 
+\subsection{\texttt{--Ne}}
+Change the effective population size used in the HMM transition probabilites. Defaults to 14,000. Very little effect on the results.
+
+\subsection{\texttt{--npt}}
+Change the number of paths used to phase. Default 10.
+
+\subsection{\texttt{--thw}}
+Change the triple heterozygote weight (i.e. emission probability). Default 0.01.
+
+\subsection{\texttt{--mtp}}
+Change the mutation probability used for emissions. Default 0.01.
+
+\subsection{\texttt{--tbk}}
+Change the number of steps to keep the viterbi matrix in
+memory. Speed/memory tradeoff. Decrease to use less memory (and run
+more slowly). Default 100. If there are $S$ sites and $N$ individuals
+in your sample then memory usage is roughly of the order
+$O(NS+\{tbk\}S^2)$. 
+
+
+\end{document}
