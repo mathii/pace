@@ -182,9 +182,9 @@ def phasing_to_string(phase_tuple):
     Convert my strange phasing format to a vcf style string
     """
     if phase_tuple==(None,None):
-        return "1|0"
+        return "1/0"
     else:
-        return str(phase_tuple[0])+"/"+str(phase_tuple[1])
+        return str(phase_tuple[0])+"|"+str(phase_tuple[1])
 
 ##########################################################################################################
 
