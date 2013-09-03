@@ -229,6 +229,7 @@ def output_phased_data(phasing, sample_names, snp_names, options):
     things_to_output=[("ph", "phase", phasing_to_string)]
     if options.get("quality", None): things_to_output.append( ("qa", "quality", quality_to_string) )
     if options.get("best_parents", None): things_to_output.append( ("bp", "best_parents", parents_to_string) )
+    if options.get("impute", None): things_to_output.append( ("iq", "impute_quality", quality_to_string) )
    
     # Output phased data
     for suffix, tag, format_func in things_to_output:

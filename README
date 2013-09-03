@@ -14,5 +14,6 @@ http://www.enthought.com/.
 Manual: 
 
 >pdflatex pace_manual.tex  
+>pdflatex pace_manual.tex
 
-for full details of options. 
+(run twice) for full details of options. 

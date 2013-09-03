@@ -21,6 +21,7 @@
 
 from __future__ import division
 import random
+import numpy as np
 
 max_quality=100
 
@@ -35,17 +36,49 @@ def phase_n_tracebacks(viterbi_object, sample_names, snp_pos, options, genotypes
     n=options["n_phasing_paths"]
     phases=[]
     tbs=viterbi_object.traceback(n_paths=n, use_everything=options.get("everything", False) )
+
+    impute_quality=None
+    if options.get("impute", None):
+        observations, impute_quality=impute_n_tracebacks(tbs, genotypes, observations, viterbi_object.emission)
+                                           
     phases=[phase_traceback(tb, genotypes, observations) for tb in tbs]
 
     phase,quality=combine_phases(phases)
     
     if options.get("everything", None): # Phase everything that's left randomly
-        quality=[0.5*max_quality if p==(None, None) else q for p,q in zip(phase,quality)] # quality score of 50 for things that are randomly phased. 
+        quality=[0 if p==(None, None) else q for p,q in zip(phase,quality)] # quality score of 0 for things that are randomly phased. 
         phase=[[(0,1),(1,0)][random.randint(0,1)] if p==(None, None) else p for p in phase]
                 
     parents=[fix_parent_index(p, sample_index) for p in order_parents(tbs[0])]
 
-    return {"phase":phase, "quality":quality, "best_parents":parents}
+    return {"phase":phase, "quality":quality, "best_parents":parents, "impute_quality":impute_quality}
+
+########################################################################################################## 
+
+def impute_n_tracebacks(tracebacks, genotypes, observations, emissions):
+    """
+    Try to impute observations which are missing 
+    """
+    # 4xn matrix, each row contains scores for genotypes (0,1,2,3) respectively
+    impute_scores=np.zeros(shape=(4,len(observations)))
+    for traceback in tracebacks:
+        for i, mf in enumerate(traceback):
+            if observations[i]==3:
+                impute_scores[:,i]+=emissions[genotypes[i,mf[0]],genotypes[i,mf[1]],:]
+
+    impute_scores=impute_scores/len(tracebacks)
+                
+    imputed=observations[:]
+    impute_quality=[0 for x in observations]
+    
+    for i, obs in enumerate(observations):
+        if obs==3:
+            best=np.argmax(impute_scores[:,i])
+            if sum(impute_scores[:,i]==impute_scores[best,i])==1:  # if unique best score
+                imputed[i]=best
+                impute_quality[i]=np.round(impute_scores[best,i]*max_quality)
+                
+    return imputed, impute_quality
 
 ########################################################################################################## 
 

@@ -77,7 +77,7 @@ def parse_options():
     options ={ "Ne": 14000, "out":"pace.out", "algorithm":"viterbi", "traceback_lookback_k":100, "recombination_map":"1", "n_phasing_paths":10, "triple_het_weight":0.01, "mutation_probability":0.01}
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hg:s:m:v:r:x:i:o:qbze1pyu:c:a:f", ["gen=", "sample=", "minimal=", "vcf=", "recombination=", "max_snps=", "out=", "quality", "best_parents", "gzip", "everything", "phase", "individual=", "multi_process=", "closest=", "algorithm=",  "Ne=", "tbk=", "mgd=", "npt=", "thw=", "mtp=" ])
+        opts, args = getopt.getopt(sys.argv[1:], "hg:s:m:v:r:x:i:o:qbze1pyu:c:a:f", ["gen=", "sample=", "minimal=", "vcf=", "recombination=", "max_snps=", "out=", "quality", "best_parents", "gzip", "everything", "phase", "individual=", "multi_process=", "closest=", "algorithm=",  "Ne=", "tbk=", "mgd=", "npt=", "thw=", "mtp=", "imp" ])
     except Exception as err:
         print str(err)
         help()
@@ -110,6 +110,7 @@ def parse_options():
         elif o in ["--npt"]:                 options["n_phasing_paths"] = int(a)      
         elif o in ["--thw"]:                 options["triple_het_weight"] = float(a)      
         elif o in ["--mtp"]:                 options["mutation_probability"] = float(a)      
+        elif o in ["--imp"]:                 options["impute"] = True      
 
     # Check we entered some sensible data
     if not (options.get("test_file") or options.get("vcf_file")):

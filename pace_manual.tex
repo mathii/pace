@@ -98,6 +98,14 @@ Specify an integer argument $n$. Subsample and use only the closest $n$ individu
 \subsection{\texttt{-e [--everything]}}
 No argument. Try to phase every site. Singletons are phased randomly. Actually this doesn't do much better than phasing normally and then phasing remaining sites randomly
 
+\subsection{\texttt{--imp}}
+Try to impute any missing genotypes before phasing. Missing genotypes are
+imputed by letting the parents vote on what they think the
+genotype should be, according to the emission matrix. Outputs a
+.iq.txt file which contains quality scores for the imputed
+sites. This option is slightly experimental, so don't rely on it too
+much. 
+
 \newpage
 
 \section{Obscure options}
