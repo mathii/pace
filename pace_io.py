@@ -101,6 +101,8 @@ def load_minimal_data(test_file):
        if i==0: 
            sample_names=line.split()
        else:
+           if not all([x in ["0", "1", "2", "."] for x in line.split()[1:]]):
+               raise Exception("Could not read line: " + lines)  
            genotype_data.append([3 if x=="." else int(x) for x in line.split()[1:]])
            snp_pos.append(int(line.split()[0]))
        i+=1
@@ -156,6 +158,9 @@ def load_vcf_data(vcf_file):
 
             snp_pos.append(int(data[1]))
 
+            if not all([(x[0]=="." and x[2]==".") or (x[0] in ["0", "1"] and x[2] in ["0", "1"]) for x in data[9:]]):
+                raise Exception("Could not read line: " + line)  
+            
             genotype_data.append([ 3 if x[0]=="." and x[2]=="." else int(x[0])+int(x[2]) for x in data[9:] ])
 
     return {"sample_names":sample_names, "snp_names":snp_names, "snp_pos":snp_pos, "genotype_data":genotype_data}
@@ -235,7 +240,7 @@ def output_phased_data(phasing, sample_names, snp_names, options):
             file_name = options["out"]+"."+suffix+".txt"
             out_file = open(file_name, "w")
         
-        out_file.write( "\t".join(["CHR:POS"]+sample_names) + "\n" )
+        out_file.write( "\t".join(["POS"]+sample_names) + "\n" )
         for i in range(len(phasing[sample_names[0]][tag])):
             out_file.write( "\t".join([snp_names[i]]+[format_func(phasing[s][tag][i]) for s in sample_names] ) + "\n")
         

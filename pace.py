@@ -114,6 +114,8 @@ def parse_options():
     # Check we entered some sensible data
     if not (options.get("test_file") or options.get("vcf_file")):
         raise Exception("Must specify some data")
+    if options.get("test_file") and options.get("vcf_file"):
+        raise Exception("Specify only one data source (not both -m and -v)")
     if not options.get("recombination_map"):
         raise Exception("Must specify recombination map")
     if options["algorithm"] not in algo_defs.keys():
