@@ -77,7 +77,7 @@ def parse_options():
     options ={ "Ne": 14000, "out":"pace.out", "algorithm":"viterbi", "traceback_lookback_k":100, "recombination_map":"1", "n_phasing_paths":10, "triple_het_weight":0.01, "mutation_probability":0.01}
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hg:s:m:r:x:i:o:qbze1pyu:c:a:f", ["gen=", "sample=", "minimal=", "recombination=", "max_snps=", "out=", "quality", "best_parents", "gzip", "everything", "phase", "individual=", "multi_process=", "closest=", "algorithm=",  "Ne=", "tbk=", "mgd=", "npt=", "thw=", "mtp=" ])
+        opts, args = getopt.getopt(sys.argv[1:], "hg:s:m:v:r:x:i:o:qbze1pyu:c:a:f", ["gen=", "sample=", "minimal=", "vcf=", "recombination=", "max_snps=", "out=", "quality", "best_parents", "gzip", "everything", "phase", "individual=", "multi_process=", "closest=", "algorithm=",  "Ne=", "tbk=", "mgd=", "npt=", "thw=", "mtp=" ])
     except Exception as err:
         print str(err)
         help()
@@ -88,6 +88,7 @@ def parse_options():
             help()
             sys.exit()
         elif o in ["-m","--minimal"]:        options["test_file"] = a
+        elif o in ["-v","--vcf"]:            options["vcf_file"] = a
         elif o in ["-r","--recombination"]:  options["recombination_map"] = a
         elif o in ["-o","--out"]:            options["out"] = a      
         elif o in ["-q","--quality"]:        options["quality"] = True      
@@ -111,7 +112,7 @@ def parse_options():
         elif o in ["--mtp"]:                 options["mutation_probability"] = float(a)      
 
     # Check we entered some sensible data
-    if not (options.get("test_file")):
+    if not (options.get("test_file") or options.get("vcf_file")):
         raise Exception("Must specify some data")
     if not options.get("recombination_map"):
         raise Exception("Must specify recombination map")
@@ -261,7 +262,10 @@ def main(options):
         data["snp_pos"]=data["snp_pos"][0:max_snps]
         data["genotype_data"]=data["genotype_data"][0:max_snps]
     data["genotype_data"] = array(data["genotype_data"])
-
+    options["missing_probability"]=np.mean(data["genotype_data"]==3)
+    if options["missing_probability"]>0:
+        print "Found "+str(int(np.round(options["missing_probability"]*100))) + "% missing genotypes"
+    
     # Phasing
     if options.get("phase", None):
         samples_to_run=data["sample_names"]
@@ -269,7 +273,7 @@ def main(options):
             samples_to_run=options["individual"]
 
         results=calculate_full_matrix(data, samples_to_run, recomb, options, phasing.phase_n_tracebacks)
-        io.output_phased_data(results, samples_to_run, options)
+        io.output_phased_data(results, samples_to_run, data["snp_names"], options)
             
 
 ##########################################################################################################

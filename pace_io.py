@@ -101,7 +101,7 @@ def load_minimal_data(test_file):
        if i==0: 
            sample_names=line.split()
        else:
-           genotype_data.append([int(x) for x in line.split()[1:]])
+           genotype_data.append([3 if x=="." else int(x) for x in line.split()[1:]])
            snp_pos.append(int(line.split()[0]))
        i+=1
 
@@ -113,13 +113,22 @@ def load_minimal_data(test_file):
 ##########################################################################################################
 
 def load_vcf_data(vcf_file):
+    """
+    Load gentotype data from VCF - We're not parsing the vcf properly, so can't 
+    guarantee it's not buggy. Missing data ("./.") coded as 3 
+    """
     
-    vcf_data=open(vcf_file)
-
+    if(vcf_file[-3:]==".gz"):
+        vcf_data=gzip.open(vcf_file, "r")
+    else:
+        vcf_data=open(vcf_file, "r")
+        
     snp_names=[]
     snp_pos=[]
     genotype_data=[]
 
+    missing=0
+    
     for line in vcf_data:
 
         if line[0:2] == '##':
@@ -133,19 +142,21 @@ def load_vcf_data(vcf_file):
                 print data[0:9]
                 raise Exception("Bad vcf header line")
         else:
-            data=line[1:-1]
+            data=line[:-1]
             data=data.split("\t")
 
-            if len(data[4].split(","))>1: continue # multi-allelic sites. 
+            if len(data[4].split(","))>1: 
+                print "Warning: ignoring multi alleleic site at " + data[0]+":"+data[1] 
+                continue # multi-allelic sites. 
 
             if data[2] != ".":
                 snp_names.append(data[2])
             else:
-                snp_names.append(data[0]+":"+data[1]+":"+data[3]+":"+data[4])
+                snp_names.append(data[0]+":"+data[1])
 
             snp_pos.append(int(data[1]))
 
-            genotype_data.append([ int(x[0])+int(x[2]) for x in data[9:] ])
+            genotype_data.append([ 3 if x[0]=="." and x[2]=="." else int(x[0])+int(x[2]) for x in data[9:] ])
 
     return {"sample_names":sample_names, "snp_names":snp_names, "snp_pos":snp_pos, "genotype_data":genotype_data}
 
@@ -183,6 +194,8 @@ def phasing_to_string(phase_tuple):
     """
     if phase_tuple==(None,None):
         return "1/0"
+    elif phase_tuple==(".","."):
+        return "./."
     else:
         return str(phase_tuple[0])+"|"+str(phase_tuple[1])
 
@@ -204,7 +217,7 @@ def parents_to_string(parent_tuple):
 
 ##########################################################################################################
 
-def output_phased_data(phasing, sample_names, options):
+def output_phased_data(phasing, sample_names, snp_names, options):
     """
     Output phased data - and quality scores. 
     """
@@ -222,9 +235,9 @@ def output_phased_data(phasing, sample_names, options):
             file_name = options["out"]+"."+suffix+".txt"
             out_file = open(file_name, "w")
         
-        out_file.write( "\t".join(sample_names) + "\n" )
+        out_file.write( "\t".join(["CHR:POS"]+sample_names) + "\n" )
         for i in range(len(phasing[sample_names[0]][tag])):
-            out_file.write( "\t".join([format_func(phasing[s][tag][i]) for s in sample_names] ) + "\n")
+            out_file.write( "\t".join([snp_names[i]]+[format_func(phasing[s][tag][i]) for s in sample_names] ) + "\n")
         
         out_file.close()
 

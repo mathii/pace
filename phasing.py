@@ -107,7 +107,7 @@ def combine_phases(phases):
     # Special case for npt=1 - just return the phase, and set quality equal to either max or 0
     if(n_paths==1): 
         phase=phases[0]
-        quality=[0 if p==(None,None) else max_quality for p in phase]
+        quality=[0 if p==(None,None) or p==(".",".") else max_quality for p in phase]
         return phase, quality
 
     phase=[(None,None)]*n_sites
@@ -117,7 +117,10 @@ def combine_phases(phases):
     for i in range(n_sites):
         j_fix=n_paths
         phase_fix=(None,None)
-        if phases[0][i] in [(0,0), (1,1)]: # Assuming the top path always has homs phased correctly
+        if phases[0][i]==(".","."):       # missing genotype
+            phase[i]=(".",".")
+            quality[i]=0
+        elif phases[0][i] in [(0,0), (1,1)]: # Assuming the top path always has homs phased correctly
             phase[i]=phases[0][i]
             quality[i]=max_quality
         else:
@@ -174,8 +177,8 @@ def order_parents(traceback):
 
 def phase_traceback(traceback, genotypes, observations):
     """
-    Phase a single traceback, put None if we can't phase (because it's a triple het or inconsistent)
-    unless everything is true, in which case we phase randomly
+    Phase a single traceback, put None if we can't phase (because it's a triple het or 
+    inconsistent or one of the parents is missing)
     """
     traceback=order_parents(traceback)
 
@@ -186,8 +189,12 @@ def phase_traceback(traceback, genotypes, observations):
             phased[i]=(0,0)
         elif observations[i]==2:
             phased[i]=(1,1)
+        elif observations[i]==3:
+            phased[i]=(".",".")
         elif observations[i]==1:
-            if genotypes[i,mf[0]]>genotypes[i,mf[1]]:
+            if genotypes[i,mf[0]]==3 or genotypes[i,mf[1]]==3:
+                phased[i]=(None,None)
+            elif genotypes[i,mf[0]]>genotypes[i,mf[1]]:
                 phased[i]=(1,0)
             elif genotypes[i,mf[0]]<genotypes[i,mf[1]]:
                 phased[i]=(0,1)

@@ -55,36 +55,67 @@ class emission(object):
         """
         k = N haplotypes
         """
-        # This is the mutation prob from li&stephens
-#         th = 1/fsum([ 1/i for i in range(1,k) ])
-#         p = th/(k+th)/2         # P(mutation)
-#         q = 1-p                 # P(no mutation)
+
         p=options["mutation_probability"]
+        m=options["missing_probability"]
         self.p=p
+        self.m=m
 
         # Mendelian inheritance probabilities
-        # Mutation probability is small - only applied to non-mendelian transmission
-        self.probabilities = { (0,0,0): 1, 
-                               (0,0,1): p, 
-                               (0,0,2): p*p,
-                               (1,0,0): 1/2,
-                               (1,0,1): 1/2,
-                               (1,0,2): p,
-                               (1,1,0): 1/4,
-                               (1,1,1): 1/2,
-                               (1,1,2): 1/4,
-                               (2,0,0): p,
-                               (2,0,1): 1,
-                               (2,0,2): p,
-                               (2,1,0): p,
-                               (2,1,1): 1/2,
-                               (2,1,2): 1/2,
-                               (2,2,0): p*p,
-                               (2,2,1): p,
-                               (2,2,2): 1,
+        # Assuming mutation probability is small - only applied to non-mendelian transmission
+        # state 3 indicates a missing genotype
+        self.probabilities = { (0,0,0): (1-p-p*p)*(1-m), 
+                               (0,0,1): p*(1-m), 
+                               (0,0,2): p*p*(1-m),
+                               (0,0,3): m,
+
+                               (1,0,0): (1-m)*(1-p)/2,
+                               (1,0,1): (1-m)*(1-p)/2,
+                               (1,0,2): (1-m)*p,
+                               (1,0,3): m,
+
+                               (1,1,0): (1-m)*1/4,
+                               (1,1,1): (1-m)*1/2,
+                               (1,1,2): (1-m)*1/4,
+                               (1,1,3): m,
+
+                               (2,0,0): (1-m)*p,
+                               (2,0,1): (1-m)*(1-2*p),
+                               (2,0,2): (1-m)*p,
+                               (2,0,3): m,
+
+                               (2,1,0): (1-m)*p,
+                               (2,1,1): (1-m)*(1-p)/2,
+                               (2,1,2): (1-m)*(1-p)/2,
+                               (2,1,3): m,
+
+                               (2,2,0): (1-m)*p*p,
+                               (2,2,1): (1-m)*p,
+                               (2,2,2): (1-m)*(1-p-p*p),
+                               (2,2,3): m,
+
+                               (3,0,0): (1-m)*(1-p)/2,
+                               (3,0,1): (1-m)*(1-p)/2,
+                               (3,0,2): (1-m)*p,
+                               (3,0,3): m,
+
+                               (3,1,0): (1-m)/3,
+                               (3,1,1): (1-m)/3,
+                               (3,1,2): (1-m)/3,
+                               (3,1,3): m,
+
+                               (3,2,0): (1-m)*p,
+                               (3,2,1): (1-m)*(1-p)/2,
+                               (3,2,2): (1-m)*(1-p)/2,
+                               (3,2,3): m,
+
+                               (3,3,0): (1-m)/3,
+                               (3,3,1): (1-m)/3,
+                               (3,3,2): (1-m)/3,
+                               (3,3,3): m,
                                }
 
-        self.probabilities[(1,1,1)]=options["triple_het_weight"]
+        self.probabilities[(1,1,1)]=(1-m)*options["triple_het_weight"]
 
         # Add in all probabilities with hidden values flipped. 
         new_items = {}

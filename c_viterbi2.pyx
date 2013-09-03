@@ -69,7 +69,7 @@ class calculator(object):
         Convert the dictionary based lookup from the emission object to an array based lookup
         That is, a 3D array indexed by {0,1,2} - genotypes, containing probabilities.
         """
-        cdef np.ndarray[np.float64_t, ndim=3] em=np.zeros((3,3,3), dtype=np.float64)
+        cdef np.ndarray[np.float64_t, ndim=3] em=np.zeros((4,4,4), dtype=np.float64)
         prob_dict = emission.probabilities
         
         for key,value in prob_dict.items():
