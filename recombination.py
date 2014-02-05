@@ -56,13 +56,14 @@ class recombinator(object):
         self.rate=[]
         self.dist=[]
 
-        recombination_file.next()
-
+        header=recombination_file.next()
+        header_map=self.parse_header(header)
+        
         for line in recombination_file:
-            data=line[:-1].split(" ")
-            self.position.append(int(data[0]))
-            self.rate.append(float(data[1]))
-            self.dist.append(float(data[2]))
+            data=line[:-1].split()
+            self.position.append(int(data[header_map["POS"]]))
+            self.rate.append(float(data[header_map["RATE"]]))
+            self.dist.append(float(data[header_map["MAP"]]))
         
         recombination_file.close()
 
@@ -71,6 +72,23 @@ class recombinator(object):
 
         self.fitter = interpolate.UnivariateSpline(self.position, self.dist, k=1, s=0) # Linear interpolation
 
+    def parse_header(self, header_line):
+        """
+        Try and parse the header line and figure out what are the position, rate and dist columns
+        """
+        bits=header_line.split()
+        
+        header_map={"POS":None, "RATE":None, "MAP":None}
+        
+        for what in header_map.keys():
+            where=[y.upper()[:len(what)]==what for y in bits]
+            if sum(where)!=1:
+                raise Exception("Check that map file has headers \"Pos\", \"Rate\" and \"Map\" (in CM)")
+            else:
+                header_map[what]=[i for i in range(len(where)) if where[i]][0]
+        print header_map
+        return header_map
+                
     def distance(self, position_1, position_2):
         """
         Return the genetic distance in cm between two points
@@ -91,9 +109,9 @@ class constant_recombinator(object):
     def distance(self, position_1, position_2):
         """
         Return the genetic distance between two points
-        in probailities (i.e. morgans). The rec rate is
-        given in cm/mb so need to correct cm
+        in cM. The rec rate is given in cm/mb
         """
         return self.rate*(position_2-position_1)*10e-6 
 
 ##########################################################################################################
+
