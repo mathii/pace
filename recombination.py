@@ -86,7 +86,7 @@ class recombinator(object):
                 raise Exception("Check that map file has headers \"Pos\", \"Rate\" and \"Map\" (in CM)")
             else:
                 header_map[what]=[i for i in range(len(where)) if where[i]][0]
-        print header_map
+
         return header_map
                 
     def distance(self, position_1, position_2):
