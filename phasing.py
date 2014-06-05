@@ -27,7 +27,7 @@ max_quality=100
 
 ########################################################################################################## 
 
-def phase_n_tracebacks(viterbi_object, sample_names, snp_pos, options, genotypes, observations, sample_index):
+def phase_n_tracebacks(viterbi_object, sample_indices, snp_pos, options, genotypes, observations, sample_index):
     """
     Phasing
     """
@@ -49,7 +49,7 @@ def phase_n_tracebacks(viterbi_object, sample_names, snp_pos, options, genotypes
         quality=[0 if p==(None, None) else q for p,q in zip(phase,quality)] # quality score of 0 for things that are randomly phased. 
         phase=[[(0,1),(1,0)][random.randint(0,1)] if p==(None, None) else p for p in phase]
                 
-    parents=[fix_parent_index(p, sample_index) for p in order_parents(tbs[0])]
+    parents=[(sample_indices[p1],sample_indices[p2]) for p1,p2 in order_parents(tbs[0])]
 
     return {"phase":phase, "quality":quality, "best_parents":parents, "impute_quality":impute_quality}
 
@@ -79,18 +79,6 @@ def impute_n_tracebacks(tracebacks, genotypes, observations, emissions):
                 impute_quality[i]=np.round(impute_scores[best,i]*max_quality)
                 
     return imputed, impute_quality
-
-########################################################################################################## 
-
-def fix_parent_index(p, sample_index):
-    """
-    Add one to the value of each parent if it's index is greater than 
-    the one being queried. 
-    """
-    p1,p2=p
-    if p1>=sample_index: p1+=1
-    if p2>=sample_index: p2+=1
-    return p1,p2
 
 ##########################################################################################################
 

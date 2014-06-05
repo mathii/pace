@@ -54,7 +54,9 @@ def help():
     print "What to do:"
     print "-n    [nearest] neigbour relatedness matrix"
     print "-p    [phase] sample"
-    print "-i*   calculate for only these [individual]s - comma separated list or file with one per line"
+    print "-i*   calculate for these [individual]s - comma sep list or file with one per line"
+    print "-a*   use a [panel] of only these individuals - as -i option"
+
     print
     print "Options:"
     print "-u*   [multi_process]ing: use this many processes"
@@ -79,7 +81,7 @@ def parse_options():
     options ={ "Ne": 14000, "out":"pace.out", "algorithm":"viterbi", "traceback_lookback_k":100, "recombination_map":"1", "n_phasing_paths":10, "triple_het_weight":0.01, "mutation_probability":0.01}
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hg:s:m:v:r:x:i:o:qbze1pyu:c:a:f", ["help", "gen=", "sample=", "minimal=", "vcf=", "recombination=", "max_snps=", "out=", "quality", "best_parents", "gzip", "everything", "phase", "individual=", "multi_process=", "closest=", "algorithm=",  "Ne=", "tbk=", "mgd=", "npt=", "thw=", "mtp=", "imp" ])
+        opts, args = getopt.getopt(sys.argv[1:], "hg:s:m:v:r:x:i:o:qbze1pyu:c:a:n:f", ["help", "gen=", "sample=", "minimal=", "vcf=", "recombination=", "max_snps=", "out=", "quality", "best_parents", "gzip", "everything", "phase", "individual=", "multi_process=", "closest=", "algorithm=",  "Ne=", "tbk=", "mgd=", "npt=", "thw=", "mtp=", "imp", "panel" ])
     except Exception as err:
         print str(err)
         help()
@@ -99,6 +101,7 @@ def parse_options():
  
         elif o in ["-p","--phase"]:          options["phase"] = True      
         elif o in ["-i","--individual"]:     options["individual"] = io.parse_individual(a)
+        elif o in ["-n","--panel"]:          options["panel"] = io.parse_individual(a)
 
         elif o in ["-a","--algorithm"]:      options["algorithm"] = a      
         elif o in ["-x","--max_snps"]:       options["max_snps"] = int(a)      
@@ -115,15 +118,7 @@ def parse_options():
         elif o in ["--imp"]:                 options["impute"] = True      
 
     # Check we entered some sensible data
-    if not (options.get("test_file") or options.get("vcf_file")):
-        raise Exception("Must specify some data")
-    if options.get("test_file") and options.get("vcf_file"):
-        raise Exception("Specify only one data source (not both -m and -v)")
-    if not options.get("recombination_map"):
-        raise Exception("Must specify recombination map")
-    if options["algorithm"] not in algo_defs.keys():
-        raise Exception("Algorithm %s not recognised. Choose one of %s" %( options["algorithm"], ",".join(algo_defs.keys())))
-
+    validate_options(options)
     print
     print "Running with the following options:"
     for o, a in options.items():
@@ -132,6 +127,27 @@ def parse_options():
 
     return options
 
+##########################################################################################################
+
+def validate_options(options):
+    """
+    Check that the options we entered are sensible
+    """
+    if not (options.get("test_file") or options.get("vcf_file")):
+        raise Exception("Must specify some data")
+    if options.get("test_file") and options.get("vcf_file"):
+        raise Exception("Specify only one data source (not both -m and -v)")
+    if not options.get("recombination_map"):
+        raise Exception("Must specify recombination map")
+    if options["algorithm"] not in algo_defs.keys():
+        raise Exception("Algorithm %s not recognised. Choose one of %s" %( options["algorithm"], ",".join(algo_defs.keys())))
+    if options.get("panel"):
+        Np=len(options["panel"])
+        Nt=options["n_phasing_paths"]
+        if Nt > Np*(Np-1)/2:
+            raise Exception("Number of phasing paths must be <= number of panel pairs")
+
+    
 ##########################################################################################################
 
 def safe_run_for_one_sample(args):
@@ -157,7 +173,8 @@ def run_for_one_sample(args):
     Estimate the nearest neighbour in the sample at each snp by using the 
     supplied algorithm. Returns a list of length equal to the number
     of snps with the nearest neighbour in each position. 
-    what, should be either nn or phase
+    what, should be either nn or phase. Sample indices maps used sample index
+    back to actual sample index, which is from a superset. 
     """
     (sample_name, data, recombinator, options, summary_function) = args
 
@@ -166,14 +183,23 @@ def run_for_one_sample(args):
 
     i = data["sample_names"].index(sample_name) # This is the index of the sample to be queried
 
-    N_samples = len(data["sample_names"])-1
-    N_snps = len(data["snp_pos"])
 
+    include=np.ones(len(data["sample_names"]), dtype=np.bool)
+    if "panel" in options:
+        include=np.in1d(np.array(data["sample_names"]), np.array(options["panel"]))
+    # exclude current snp
+    include[i]=False
+    
     # Data with the current snp excluded
     observations=data["genotype_data"][:,i]
-    used_sample_names=data["sample_names"][:i]+data["sample_names"][(i+1):]
-    used_genotype_data=np.hstack([data["genotype_data"][:,:i], data["genotype_data"][:,(i+1):]])
+    used_sample_names=[x for x,i in zip(data["sample_names"],include) if i]
+    used_genotype_data=data["genotype_data"][:,include]
 
+    used_sample_indices=np.where(include)[0]
+    
+    N_samples = sum(include)
+    N_snps = len(data["snp_pos"])
+    
     # Subsampling
     if "closest" in options:
         used_genotype_data, used_sample_names = pre.closest_n( used_genotype_data, used_sample_names, observations, options["closest"] )
@@ -183,9 +209,8 @@ def run_for_one_sample(args):
     vit=algorithm.calculator(used_genotype_data, trans, emiss, observations, options)
 
     vit.calculate()
+    out = summary_function(vit, used_sample_indices, data["snp_pos"], options, used_genotype_data, observations, i ) 
 
-    out = summary_function(vit, used_sample_names, data["snp_pos"], options, used_genotype_data, observations, i ) 
-    
     if "multi_process" in options: # This is a bit of a hack to get some output from the multiprocess. 
         print "\033[1ACompleted: "+str(data["sample_names"].index(sample_name))+"/"+str(len(data["sample_names"]))
 

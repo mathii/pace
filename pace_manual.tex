@@ -86,6 +86,11 @@ No argument. Phase the sample - if you don't specify this, nothing will happen.
 \subsection{\texttt{-i [--individual]}}
 Takes an argument. Phase only these individuals. The argument can either be a single sample name, or a text file with one sample name per line. 
 
+\subsection{\texttt{-n [--panel]}}
+Takes an argument. Use only these individuals to phase. The argument
+can either be a single sample name, or a text file with one sample
+name per line. 
+
 \subsection{\texttt{-x [--max-snps]}}
 Specify a constant argument $n$: use only the first $n$ SNPs.  
 
@@ -114,7 +119,10 @@ All of these take arguments.
 Change the effective population size used in the HMM transition probabilites. Defaults to 14,000. Very little effect on the results.
 
 \subsection{\texttt{--npt}}
-Change the number of paths used to phase. Default 10.
+Change the number of paths used to phase. Default 10. In general this
+must be less than $\frac{N(N-1)}{2}$ where $N$ is the number of
+individuals available to phase (sample size - 1 unless the
+\texttt{panel} option is specified).
 
 \subsection{\texttt{--thw}}
 Change the triple heterozygote weight (i.e. emission probability). Default 0.01.
