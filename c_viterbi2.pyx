@@ -289,7 +289,7 @@ class calculator(object):
         which path=i gets the i+1th best path.  
         """
         cdef int max_tb_k = self.options["traceback_lookback_k"]
-        cdef np.ndarray[np.int_t, ndim=2] t=self.traceback_matrix[(self.Nx-max_tb_k):self.Nx,].todense()
+        cdef np.ndarray[np.int_t, ndim=2] t=self.traceback_matrix[(self.Nx-max_tb_k):self.Nx,:].todense()
         cdef int Nx = self.Nx     # Number of markers
         cdef int i,j, t_i, s_i
         cdef np.ndarray[np.int_t, ndim=1] index=np.zeros(n_paths, dtype=int)
@@ -309,7 +309,7 @@ class calculator(object):
 
             if t_i==0 and i>0:
                 start=max(0,self.Nx-i-max_tb_k)-(self.Nx-i-max_tb_k)
-                t[start:max_tb_k,]=self.traceback_matrix[max(0,self.Nx-i-max_tb_k):(self.Nx-i),].todense() # copy the traceback matrix into a c array in chunks for fast indexing
+                t[start:max_tb_k,]=self.traceback_matrix[max(0,self.Nx-i-max_tb_k):(self.Nx-i),:].todense() # copy the traceback matrix into a c array in chunks for fast indexing
             for j from 0<=j<n_paths:
                 if one_step_index[j]:
                     tb[j][i]=self.states[one_step_index[j]]
