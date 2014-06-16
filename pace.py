@@ -88,6 +88,10 @@ def parse_options():
         help()
         sys.exit()
 
+    if not opts:
+        help()
+        sys.exit()        
+        
     for o, a in opts:
         if o in ["-h","--help"]:
             help()
