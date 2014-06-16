@@ -21,6 +21,8 @@
 from __future__ import division
 import sys, getopt, gzip
 from math import exp, log, fsum
+import numpy as np
+import pdb
 
 ##########################################################################################################
 
@@ -112,6 +114,34 @@ def load_minimal_data(test_file):
 
     return {"sample_names":sample_names, "snp_names":snp_names, "snp_pos":snp_pos, "genotype_data":genotype_data}
 
+##########################################################################################################
+
+def load_eigenstrat_data(file_root):
+    """
+    Load gentotype data from an [unpacked] eigenstrat file. file_root{.snp,.ind,.geno}
+    Missing data coded as 9. 
+    """
+
+    ind_file=open(file_root+".ind", "r")
+    snp_file=open(file_root+".snp", "r")
+    gen_file=open(file_root+".geno", "r")
+    
+    sample_names=ind_file.readlines()
+    sample_names=[x.strip() for x in sample_names]
+    sample_names=[x.split()[0] for x in sample_names]
+    ind_file.close()
+    
+    snp_data=snp_file.readlines()
+    snp_data=[x.strip() for x in snp_data]
+    snp_names=[x.split()[0] for x in snp_data]
+    snp_pos=[int(x.split()[3]) for x in snp_data]
+    snp_file.close()
+
+    genotype_data=np.genfromtxt(file_root+".geno", dtype=np.int, delimiter=1)
+    genotype_data[genotype_data==9]=3
+    return {"sample_names":sample_names, "snp_names":snp_names, "snp_pos":snp_pos, "genotype_data":genotype_data}
+
+    
 ##########################################################################################################
 
 def load_vcf_data(vcf_file):

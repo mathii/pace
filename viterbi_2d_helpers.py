@@ -28,7 +28,6 @@ class transition(object):
             cjdj = self.recombinator.distance(self.positions[t-1], self.positions[t])/100
             fac = exp(-4 * self.Ne * cjdj /self.k)            
             self.fac_cache[t] = fac
-        
         return fac
 
     def single_transition_probability(self,t):
@@ -42,7 +41,12 @@ class transition(object):
         fac = self.get_fac(t)
         p = (1-fac)
         # Use fac instead of 1-p because fac can be small and using 1-p leads to floating point errors. 
-        return ( fac*fac, p*fac/self.k, p*p/self.k/self.k/4 ) # here dividing by 2*k 
+        # But consider the case when fac=0.
+        k=self.k 
+        if not fac:
+            return (1/(k*2), 2*(1-1/k)/k, (1-1/k)*(1-1/k))
+        else: 
+            return ( fac*fac, p*fac/k, p*p/k/k/4 ) # here dividing by 2*k 
         
 
 ##########################################################################################################

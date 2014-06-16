@@ -250,11 +250,12 @@ class calculator(object):
             # Back to outer loop ( i over Nx ) 
             # Move traceback on, wrapping round if required
             tb_k = (tb_k + 1) % max_tb_k
-            
+
             best_last_V=-1.0
             for j from 0 <= j < Ns:
                 if best_last_V < thisV[j]:
                     best_last_V = thisV[j]
+
             for j from 0 <= j < Ns: 
                 thisV[j] = thisV[j]/best_last_V
                 lastV[j] = thisV[j]
