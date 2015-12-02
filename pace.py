@@ -56,7 +56,7 @@ def help():
     print "-n    [nearest] neigbour relatedness matrix"
     print "-p    [phase] sample"
     print "-i*   calculate for these [individual]s - comma sep list or file with one per line"
-    print "-a*   use a [panel] of only these individuals - as -i option"
+    print "-n*   use a [panel] of only these individuals - as -i option"
 
     print
     print "Options:"
