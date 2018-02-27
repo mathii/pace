@@ -110,9 +110,9 @@ class calculator(object):
         cdef np.ndarray[np.int_t, ndim=1] observed=self.observed
 
         #These are used for building the sparse traceback matrix
-        cdef np.ndarray[np.int_t, ndim=1] I=np.zeros(max_num_sparse_elems, dtype=int)
-        cdef np.ndarray[np.int_t, ndim=1] J=np.zeros(max_num_sparse_elems, dtype=int)
-        cdef np.ndarray[np.int_t, ndim=1] V=np.zeros(max_num_sparse_elems, dtype=int)
+        cdef np.ndarray[np.int_t, ndim=1] I=np.zeros(max_nse, dtype=int)
+        cdef np.ndarray[np.int_t, ndim=1] J=np.zeros(max_nse, dtype=int)
+        cdef np.ndarray[np.int_t, ndim=1] V=np.zeros(max_nse, dtype=int)
         cdef np.ndarray[np.int_t, ndim=2] tb_arr=np.zeros((max_tb_k,Ns), dtype=int)
 
         # used for bits of the Viterbi algorithm
